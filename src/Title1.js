@@ -16,7 +16,10 @@ class Title extends Component {
     size = this.props.size;
     center = this.size / 2;
 
-    boxSize = 250;
+    strokeWidth = 2.5;
+    box = 62.5;
+
+    boxSize = this.size * this.box / 100;
     halfBoxSize = this.boxSize / 2;
 
     start = { scale: 0, rotation: 0 };
@@ -46,6 +49,7 @@ class Title extends Component {
     render() {
         const { text, size } = this.props;
         const center = size / 2;
+        const strokeWidth = Math.ceil(size * this.strokeWidth / 100);
         const { width, height } = this.state.bbox;
 
         const values = /\*(\w+)\*/g.exec(text) || [];
@@ -77,7 +81,7 @@ class Title extends Component {
                                     height={this.boxSize}
                                     fill="transparent"
                                     stroke="rgb(249, 178, 63)"
-                                    strokeWidth="10"
+                                    strokeWidth={strokeWidth}
                                     style={this.calculateRectStyle(styles)}
                                 />
                             </g>
@@ -89,7 +93,8 @@ class Title extends Component {
                                     fill="white"
                                     textAnchor="middle"
                                     alignmentBaseline="central"
-                                    style={this.calculateTextStyle(styles, scale)}>
+                                    style={this.calculateTextStyle(styles, scale)}
+                                >
                                     {text.slice(0, index)}
                                     {!!values.length &&
                                         <tspan alignmentBaseline="central" fontWeight="bold">{values[1]}</tspan>
