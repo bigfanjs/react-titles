@@ -1,32 +1,38 @@
 import React, { Component, Fragment } from "react";
 import { Motion, spring } from "react-motion";
 import PropTypes from "prop-types";
+import uniqid from "uniqid";
 
 const config = { stiffness: 30, damping: 10 };
 
 class Title extends Component {
-    state = { bbox: { width: 0, height: 0 } };
+    constructor(props) {
+        super(props);
+        this.id = uniqid();
+
+        this.state = { bbox: { width: 0, height: 0 } };
+
+        const size = this.size = this.props.size;
+        this.center = size / 2;
+
+        this.strokeWidth = 2.5;
+        this.box = 62.5;
+
+        this.boxSize = size * this.box / 100;
+        this.halfBoxSize = this.boxSize / 2;
+
+        this.start = { scale: 0, rotation: 0 };
+        this.end = {
+            scale: spring(1, config),
+            rotation: spring(90, config),
+            y: spring(0, config)
+        };
+    }
 
     static propTypes = {
         size: PropTypes.number,
         fontFamily: PropTypes.string,
         text: PropTypes.string
-    };
-
-    size = this.props.size;
-    center = this.size / 2;
-
-    strokeWidth = 2.5;
-    box = 62.5;
-
-    boxSize = this.size * this.box / 100;
-    halfBoxSize = this.boxSize / 2;
-
-    start = { scale: 0, rotation: 0 };
-    end = {
-        scale: spring(1, config),
-        rotation: spring(90, config),
-        y: spring(0, config)
     };
 
     componentDidMount() {
@@ -61,19 +67,19 @@ class Title extends Component {
         return (
             <svg width={size} height={size}>
                 <defs>
-                    <clipPath id="clip-sides">
+                    <clipPath id={`clip-sides-${this.id}`}>
                         <rect x="0" y="0" width={size} height={center - gap} />
                         <rect x="0" y={center + gap} width={size} height={center - gap} />
                     </clipPath>
 
-                    <clipPath id="clip-middle">
+                    <clipPath id={`clip-middle-${this.id}`}>
                         <rect x="0" y={center - gap} width={size} height={gap * 2} />
                     </clipPath>
                 </defs>
                 <Motion defaultStyle={Object.assign(this.start, { y: gap * 2 })} style={this.end}>
                     {(styles) =>
                         <Fragment>
-                            <g clipPath="url(#clip-sides)">
+                            <g clipPath={`url(#clip-sides-${this.id})`}>
                                 <rect
                                     x={center - this.boxSize / 2}
                                     y={center - this.boxSize / 2}
@@ -85,7 +91,7 @@ class Title extends Component {
                                     style={this.calculateRectStyle(styles)}
                                 />
                             </g>
-                            <g clipPath="url(#clip-middle)">
+                            <g clipPath={`url(#clip-middle-${this.id})`}>
                                 <text
                                     ref={el => this.text = el}
                                     x={center}
