@@ -76,7 +76,7 @@ class Title extends Component {
                         <rect x="0" y={center - gap} width={size} height={gap * 2} />
                     </clipPath>
                 </defs>
-                <Motion defaultStyle={Object.assign(this.start, { y: gap * 2 })} style={this.end}>
+                <Motion defaultStyle={Object.assign(this.start, { y: scale * height })} style={this.end}>
                     {(styles) =>
                         <Fragment>
                             <g clipPath={`url(#clip-sides-${this.id})`}>
