@@ -8,18 +8,13 @@ const config = { stiffness: 30, damping: 10 };
 class Title extends Component {
     constructor(props) {
         super(props);
+
         this.id = uniqid();
 
         this.state = { bbox: { width: 0, height: 0 } };
 
-        const size = this.size = this.props.size;
-        this.center = size / 2;
-
         this.strokeWidth = 2.5;
-        this.box = 62.5;
-
-        this.boxSize = size * this.box / 100;
-        this.halfBoxSize = this.boxSize / 2;
+        this.boxSize = 62.5;
 
         this.start = { scale: 0, rotation: 0 };
         this.end = {
@@ -54,9 +49,10 @@ class Title extends Component {
 
     render() {
         const { text, size } = this.props;
+        const { width, height } = this.state.bbox;
         const center = size / 2;
         const strokeWidth = Math.ceil(size * this.strokeWidth / 100);
-        const { width, height } = this.state.bbox;
+        const boxSize = size * this.boxSize / 100;
 
         const values = /\*(\w+)\*/g.exec(text) || [];
         const index = values ? text.indexOf(values[0]) : text.length;
@@ -81,10 +77,10 @@ class Title extends Component {
                         <Fragment>
                             <g clipPath={`url(#clip-sides-${this.id})`}>
                                 <rect
-                                    x={center - this.boxSize / 2}
-                                    y={center - this.boxSize / 2}
-                                    width={this.boxSize}
-                                    height={this.boxSize}
+                                    x={center - boxSize / 2}
+                                    y={center - boxSize / 2}
+                                    width={boxSize}
+                                    height={boxSize}
                                     fill="transparent"
                                     stroke="rgb(249, 178, 63)"
                                     strokeWidth={strokeWidth}
