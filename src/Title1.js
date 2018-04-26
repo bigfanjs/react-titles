@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from "react";
-import { Motion, spring } from "react-motion";
+import { TransitionMotion, spring } from "react-motion";
 import PropTypes from "prop-types";
 import uniqid from "uniqid";
 
@@ -11,39 +11,85 @@ class Title extends Component {
 
         this.id = uniqid();
 
-        this.state = { bbox: { width: 0, height: 0 } };
+        this.state = {
+            bbox: { width: 0, height: 0 },
+            items: [],
+            mounted: false,
+            open: this.props.open
+        };
 
         this.strokeWidth = 2.5;
         this.boxSize = 62.5;
-
-        this.start = { scale: 0, rotation: 0 };
-        this.end = {
-            scale: spring(1, config),
-            rotation: spring(90, config),
-            y: spring(0, config)
-        };
     }
 
     static propTypes = {
         size: PropTypes.number,
         fontFamily: PropTypes.string,
-        text: PropTypes.string
+        text: PropTypes.string,
+        open: PropTypes.bool,
+        onLeave: PropTypes.func
     };
+
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.open !== prevState.open) {
+            const style = { key: "title1", scale: 1, rotation: 90, y: 0 };
+
+            return {
+                items: nextProps.open ? [style] : [],
+                open: nextProps.open
+            };
+        }
+
+        return null;
+    }
 
     componentDidMount() {
         this.setState({
-            bbox: this.text.getBBox()
+            bbox: this.text.getBBox(),
+            items: [{
+                key: "title1",
+                scale: 1,
+                rotation: 90,
+                y: 0
+            }]
         });
     }
+
+    willLeave(y) {
+        return {
+            y: spring(y, config),
+            scale: spring(0, config),
+            rotation: spring(0, config)
+        };
+    }
+
+    willEnter(y) {
+        return { y, scale: 0, rotation: 0 };
+    }
+
+    didLeave = () => {
+        this.props.onLeave();
+    }
+
+    getStyles = () => (
+        this.state.items.map(({ key, y, scale, rotation }) => ({
+            key: key,
+            style: {
+                y: spring(y, config),
+                scale: spring(scale, config),
+                rotation: spring(rotation, config)
+            }
+        }))
+    )
 
     calculateRectStyle = ({ scale, rotation }) => ({
         transform: `rotate(${rotation}deg) scale(${scale})`,
         transformOrigin: "center center"
     });
 
-    calculateTextStyle = ({ y }, scale) => ({
+    calculateTextStyle = (style, scale) => ({
         fontFamily: this.props.fontFamily,
-        transform: `translateY(${y}px) scale(${scale})`,
+        transform: `translateY(${style.y}px) scale(${scale})`,
         transformOrigin: "center center"
     });
 
@@ -72,41 +118,54 @@ class Title extends Component {
                         <rect x="0" y={center - gap} width={size} height={gap * 2} />
                     </clipPath>
                 </defs>
-                <Motion defaultStyle={Object.assign(this.start, { y: scale * height })} style={this.end}>
-                    {(styles) =>
-                        <Fragment>
-                            <g clipPath={`url(#clip-sides-${this.id})`}>
-                                <rect
-                                    x={center - boxSize / 2}
-                                    y={center - boxSize / 2}
-                                    width={boxSize}
-                                    height={boxSize}
-                                    fill="transparent"
-                                    stroke="rgb(249, 178, 63)"
-                                    strokeWidth={strokeWidth}
-                                    style={this.calculateRectStyle(styles)}
-                                />
-                            </g>
-                            <g clipPath={`url(#clip-middle-${this.id})`}>
-                                <text
-                                    ref={el => this.text = el}
-                                    x={center}
-                                    y={center}
-                                    fill="white"
-                                    textAnchor="middle"
-                                    alignmentBaseline="central"
-                                    style={this.calculateTextStyle(styles, scale)}
-                                >
-                                    {text.slice(0, index)}
-                                    {!!values.length &&
-                                        <tspan alignmentBaseline="central" fontWeight="bold">{values[1]}</tspan>
-                                    }
-                                    {!!values.length && text.slice(index + values[0].length)}
-                                </text>
-                            </g>
-                        </Fragment>
-                    }
-                </Motion>
+                <TransitionMotion
+                    styles={this.getStyles()}
+                    willLeave={this.willLeave.bind(null, height * scale)}
+                    willEnter={this.willEnter.bind(null, height * scale)}
+                    didLeave={this.didLeave}>
+                    {(items) => {
+                        const style = items.length && items[0].style;
+
+                        return (
+                            <Fragment>
+                                <g clipPath={`url(#clip-sides-${this.id})`}>
+                                    <rect
+                                        x={center - boxSize / 2}
+                                        y={center - boxSize / 2}
+                                        width={boxSize}
+                                        height={boxSize}
+                                        fill="transparent"
+                                        stroke="rgb(249, 178, 63)"
+                                        strokeWidth={strokeWidth}
+                                        style={this.calculateRectStyle(style)}
+                                    />
+                                </g>
+                                <g clipPath={`url(#clip-middle-${this.id})`}>
+                                    <text
+                                        ref={el => this.text = el}
+                                        x={center}
+                                        y={center}
+                                        fill="white"
+                                        textAnchor="middle"
+                                        alignmentBaseline="central"
+                                        style={this.calculateTextStyle(style, scale)}>
+                                            {text.slice(0, index)}
+                                            {   !!values.length &&
+                                                <tspan
+                                                    alignmentBaseline="central"
+                                                    fontWeight="bold">
+                                                        {values[1]}
+                                                </tspan>
+                                            }
+                                            {   !!values.length &&
+                                                text.slice(index + values[0].length)
+                                            }
+                                    </text>
+                                </g>
+                            </Fragment>
+                        );
+                    }}
+                </TransitionMotion>
             </svg>
         );
     }
