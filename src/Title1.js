@@ -7,6 +7,28 @@ const config = { stiffness: 30, damping: 10 };
 
 const FakeMotion = ({children}) => children({});
 
+const Text = (props) => {
+    const text = props.text;
+    const values = /\*(\w+)\*/g.exec(text) || [];
+
+    if (values.length) {
+        const index = text.indexOf(values[0]);
+
+        return [
+            text.slice(0, index),
+            <tspan
+                key="tspan"
+                alignmentBaseline="central"
+                fontWeight="bold">
+                {values[1]}
+            </tspan>,
+            text.slice(index + values[0].length)
+        ];
+    }
+
+    return text;
+};
+
 class Title extends Component {
     constructor(props) {
         super(props);
@@ -15,7 +37,10 @@ class Title extends Component {
 
         this.state = {
             bbox: { width: 0, height: 0 },
+            prevBbox: { prevWidth: 0, prevHeight: 0 },
             open: this.props.open,
+            text: this.props.text,
+            prevText: null,
             close: !this.props.open
         };
 
@@ -35,9 +60,12 @@ class Title extends Component {
 
     static getDerivedStateFromProps(nextProps, prevState) {
         if (nextProps.open !== prevState.open) {
+            return { open: nextProps.open, close: false, prevText: null };
+        } else if (nextProps.open && nextProps.text !== prevState.text) {
             return {
-                open: nextProps.open,
-                close: false
+                bbox: { width: 0, height: 0 },
+                text: nextProps.text,
+                prevText: prevState.text
             };
         }
 
@@ -50,56 +78,104 @@ class Title extends Component {
         });
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.text !== this.state.text) {
+            this.setState({
+                bbox: this.text.getBBox(),
+                prevBbox: {
+                    prevWidth: prevState.bbox.width,
+                    prevHeight: prevState.bbox.height
+                }
+            });
+        }
+    }
+
     calculateRectStyle = ({ scale, rotation }) => ({
         transform: `rotate(${rotation}deg) scale(${scale})`,
         transformOrigin: "center center"
     });
 
-    calculateTextStyle = ({ y }, scale) => ({
+    calculateTextStyle = (style, scale) => ({
         fontFamily: this.props.fontFamily,
-        transform: `translateY(${y}px) scale(${scale})`,
+        transform: `translateY(${ style.y }px) scale(${ scale })`,
+        transformOrigin: "center center"
+    });
+
+    calculatePrevTextStyle = (style, scale) => ({
+        fontFamily: this.props.fontFamily,
+        transform: `translateY(${ style.prevY }px) scale(${ scale })`,
         transformOrigin: "center center"
     });
 
     getDefaultStyle = (y) => {
-        if (this.state.open) {
-            return Object.assign(this.start, { y });
-        } else {
-            return this.end;
+        const {open, prevText} = this.state;
+
+        if (!open) return null;
+
+        if (prevText === null) {
+            return Object.assign({}, this.start, { y });
         }
+
+        return Object.assign({}, this.end, { y, prevY: 0 });
     }
 
-    getStyles = (Y) => {
-        const styles = this.state.open ? this.end : this.start;
-        const { scale, rotation, y = Y } = styles;
+    getStyles = (Y, prevY) => {
+        const { open, prevText } = this.state;
 
-        return {
-            scale: spring(scale),
-            rotation: spring(rotation),
-            y: spring(y)
-        };
+        if (prevText === null) {
+            const styles = open ? this.end : this.start;
+            const { scale, rotation, y = Y } = styles;
+
+            return {
+                scale: spring(scale, config),
+                rotation: spring(rotation, config),
+                y: spring(y, config)
+            };
+        } else {
+            const yy = Y > prevY ? Y : prevY;
+            const { scale, rotation, y } = this.end;
+
+            return {
+                scale: spring(scale, config),
+                rotation: spring(rotation * 2, config),
+                y: spring(y, config),
+                prevY: spring(-yy, config)
+            };
+        }
     };
 
     handleRest = () => {
-        if (!this.state.open) {
+        const { open, prevText } = this.state;
+
+        if (!open) {
             this.setState({
                 close: true
+            });
+        }
+
+        if (prevText) {
+            this.setState({
+                prevText: null
             });
         }
     }
 
     render() {
-        const { text, size } = this.props;
-        const { width, height } = this.state.bbox;
+        const size = this.props.size;
+        const {
+            text,
+            prevText,
+            bbox: { width, height },
+            prevBbox: { prevWidth, prevHeight }
+        } = this.state;
         const center = size / 2;
         const strokeWidth = Math.ceil(size * this.strokeWidth / 100);
         const boxSize = size * this.boxSize / 100;
 
-        const values = /\*(\w+)\*/g.exec(text) || [];
-        const index = values ? text.indexOf(values[0]) : text.length;
-
         const scale = width ? size / width : 1;
         const gap = height * 0.9 * scale / 2;
+
+        const prevScale = prevWidth ? size / prevWidth : 1;
 
         const MotionComponent = height ? Motion : FakeMotion;
 
@@ -117,8 +193,8 @@ class Title extends Component {
                     </clipPath>
                 </defs>
                 <MotionComponent
-                    defaultStyle={this.getDefaultStyle(height * scale)}
-                    style={this.getStyles(height * scale)}
+                    defaultStyle={this.getDefaultStyle(height * scale, prevHeight * prevScale)}
+                    style={this.getStyles(height * scale, prevHeight * prevScale)}
                     onRest={this.handleRest}>
                     {(styles) =>
                         <Fragment>
@@ -143,18 +219,19 @@ class Title extends Component {
                                     textAnchor="middle"
                                     alignmentBaseline="central"
                                     style={this.calculateTextStyle(styles, scale)}>
-                                    {text.slice(0, index)}
-                                    {   !!values.length &&
-                                        <tspan
-                                            alignmentBaseline="central"
-                                            fontWeight="bold">
-                                            {values[1]}
-                                        </tspan>
-                                    }
-                                    {   !!values.length &&
-                                        text.slice(index + values[0].length)
-                                    }
+                                        <Text text={text} />
                                 </text>
+                                {   prevText &&
+                                    <text
+                                        x={center}
+                                        y={center}
+                                        fill="white"
+                                        textAnchor="middle"
+                                        alignmentBaseline="central"
+                                        style={this.calculatePrevTextStyle(styles, prevScale)}>
+                                            <Text text={prevText} />
+                                    </text>
+                                }
                             </g>
                         </Fragment>
                     }
