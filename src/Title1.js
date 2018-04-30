@@ -1,11 +1,11 @@
 import React, { Component, Fragment } from "react";
-import { Motion, spring } from "react-motion";
+import { Motion as RealMotion, spring } from "react-motion";
 import PropTypes from "prop-types";
 import uniqid from "uniqid";
 
 const config = { stiffness: 30, damping: 10 };
 
-const FakeMotion = ({children}) => children({});
+const FakeMotion = ({ children }) => children({});
 
 const Text = (props) => {
     const text = props.text;
@@ -36,11 +36,9 @@ class Title extends Component {
         this.id = uniqid();
 
         this.state = {
-            bbox: { width: 0, height: 0 },
-            prevBbox: { prevWidth: 0, prevHeight: 0 },
+            bboxs: [],
+            texts: [this.props.text],
             open: this.props.open,
-            text: this.props.text,
-            prevText: null,
             close: !this.props.open
         };
 
@@ -48,7 +46,7 @@ class Title extends Component {
         this.boxSize = 62.5;
 
         this.start = { scale: 0, rotation: 0 };
-        this.end = { scale: 1, rotation: 90, y: 0 };
+        this.end = { scale: 1, rotation: 90, y1: 0 };
     }
 
     static propTypes = {
@@ -58,34 +56,24 @@ class Title extends Component {
         open: PropTypes.bool
     };
 
-    static getDerivedStateFromProps(nextProps, prevState) {
-        if (nextProps.open !== prevState.open) {
-            return { open: nextProps.open, close: false, prevText: null };
-        } else if (nextProps.open && nextProps.text !== prevState.text) {
-            return {
-                bbox: { width: 0, height: 0 },
-                text: nextProps.text,
-                prevText: prevState.text
-            };
+    static getDerivedStateFromProps({open: isOpen, text}, {open, texts}) {
+        if (isOpen !== open) {
+            return { open: isOpen, close: false, texts: [texts[0]] };
+        } else if (isOpen && text !== texts[0]) {
+            return { bboxs: [], texts: [text, texts[0]] };
         }
 
         return null;
     }
 
     componentDidMount() {
-        this.setState({
-            bbox: this.text.getBBox()
-        });
+        this.setState({ bboxs: [this.text.getBBox()] });
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.text !== this.state.text) {
+    componentDidUpdate(prevProps, { texts, bboxs }) {
+        if (texts[0] !== this.state.texts[0]) {
             this.setState({
-                bbox: this.text.getBBox(),
-                prevBbox: {
-                    prevWidth: prevState.bbox.width,
-                    prevHeight: prevState.bbox.height
-                }
+                bboxs: [this.text.getBBox(), bboxs[0]]
             });
         }
     }
@@ -95,106 +83,93 @@ class Title extends Component {
         transformOrigin: "center center"
     });
 
-    calculateTextStyle = (style, scale) => ({
+    calculateTextStyle = (style, scale, isPrev = false) => ({
         fontFamily: this.props.fontFamily,
-        transform: `translateY(${ style.y }px) scale(${ scale })`,
+        transform: `translateY(${ style[ isPrev ? "y2" : "y1" ] }px) scale(${scale})`,
         transformOrigin: "center center"
     });
 
-    calculatePrevTextStyle = (style, scale) => ({
-        fontFamily: this.props.fontFamily,
-        transform: `translateY(${ style.prevY }px) scale(${ scale })`,
-        transformOrigin: "center center"
-    });
-
-    getDefaultStyle = (y) => {
-        const {open, prevText} = this.state;
+    getDefaultStyle = (y1) => {
+        const { open, texts } = this.state;
 
         if (!open) return null;
 
-        if (prevText === null) {
-            return Object.assign({}, this.start, { y });
+        if (texts.length === 1) {
+            return Object.assign({}, this.start, { y1 });
         }
 
-        return Object.assign({}, this.end, { y, prevY: 0 });
+        return Object.assign({}, this.end, { y1, y2: 0 });
     }
 
-    getStyles = (Y, prevY) => {
-        const { open, prevText } = this.state;
+    getStyles = (scale1, scale2) => {
+        const {open, texts} = this.state;
 
-        if (prevText === null) {
-            const styles = open ? this.end : this.start;
-            const { scale, rotation, y = Y } = styles;
+        const length = texts.length > 1;
+        const styles = length || open ? this.end : this.start;
+        const { scale, rotation, y1 = scale1 } = styles;
 
-            return {
-                scale: spring(scale, config),
-                rotation: spring(rotation, config),
-                y: spring(y, config)
-            };
-        } else {
-            const yy = Y > prevY ? Y : prevY;
-            const { scale, rotation, y } = this.end;
-
-            return {
-                scale: spring(scale, config),
-                rotation: spring(rotation * 2, config),
-                y: spring(y, config),
-                prevY: spring(-yy, config)
-            };
-        }
+        return {
+            scale: spring(scale, config),
+            rotation: spring(rotation * (length ? 2 : 1), config),
+            y1: spring(y1, config),
+            y2: length ? spring(-Math.max(scale1, scale2), config) : 0
+        };
     };
 
     handleRest = () => {
-        const { open, prevText } = this.state;
+        const { open, texts } = this.state;
 
-        if (!open) {
-            this.setState({
-                close: true
-            });
+        if (!open) this.setState({ close: true });
+        if (texts[1]) {
+            this.setState((state) => ({
+                texts: [state.texts[0]]
+            }));
         }
+    }
 
-        if (prevText) {
-            this.setState({
-                prevText: null
-            });
-        }
+    getScalesAndGaps = (bboxs) => {
+        if (!bboxs[0]) return { scales: [0], gaps: [0], ys: [0] };
+
+        return bboxs
+            .filter((bbox) => bbox)
+            .reduce(({ scales, gaps, ys }, { width, height }) => {
+                const scale = width ? this.props.size / width : 1;
+                const gap = height * 0.9 * scale / 2;
+                const y = height * scale;
+
+                return {
+                    scales: [...scales, scale],
+                    gaps: [...gaps, gap],
+                    ys: [...ys, y]
+                };
+            }, { scales: [], gaps: [], ys: [] });
     }
 
     render() {
         const size = this.props.size;
-        const {
-            text,
-            prevText,
-            bbox: { width, height },
-            prevBbox: { prevWidth, prevHeight }
-        } = this.state;
         const center = size / 2;
+        const { texts, bboxs } = this.state;
+        const Motion = bboxs.length ? RealMotion : FakeMotion;
         const strokeWidth = Math.ceil(size * this.strokeWidth / 100);
         const boxSize = size * this.boxSize / 100;
-
-        const scale = width ? size / width : 1;
-        const gap = height * 0.9 * scale / 2;
-
-        const prevScale = prevWidth ? size / prevWidth : 1;
-
-        const MotionComponent = height ? Motion : FakeMotion;
+        const { scales, gaps, ys } = this.getScalesAndGaps(bboxs);
 
         return (
             !this.state.close &&
             <svg width={size} height={size}>
                 <defs>
                     <clipPath id={`clip-sides-${this.id}`}>
-                        <rect x="0" y="0" width={size} height={center - gap} />
-                        <rect x="0" y={center + gap} width={size} height={center - gap} />
+                        <rect x="0" y="0" width={size} height={center - gaps[0]} />
+                        <rect x="0" y={center + gaps[0]} width={size} height={center - gaps[0]} />
                     </clipPath>
 
                     <clipPath id={`clip-middle-${this.id}`}>
-                        <rect x="0" y={center - gap} width={size} height={gap * 2} />
+                        <rect x="0" y={center - gaps[0]} width={size} height={gaps[0] * 2} />
                     </clipPath>
                 </defs>
-                <MotionComponent
-                    defaultStyle={this.getDefaultStyle(height * scale, prevHeight * prevScale)}
-                    style={this.getStyles(height * scale, prevHeight * prevScale)}
+                <Motion
+                    defaultStyle={this.getDefaultStyle(...ys)}
+                    style={this.getStyles(...ys)}
                     onRest={this.handleRest}>
                     {(styles) =>
                         <Fragment>
@@ -218,24 +193,24 @@ class Title extends Component {
                                     fill="white"
                                     textAnchor="middle"
                                     alignmentBaseline="central"
-                                    style={this.calculateTextStyle(styles, scale)}>
-                                        <Text text={text} />
+                                    style={this.calculateTextStyle(styles, scales[0])}>
+                                        <Text text={texts[0]} />
                                 </text>
-                                {   prevText &&
+                                {   texts[1] &&
                                     <text
                                         x={center}
                                         y={center}
                                         fill="white"
                                         textAnchor="middle"
                                         alignmentBaseline="central"
-                                        style={this.calculatePrevTextStyle(styles, prevScale)}>
-                                            <Text text={prevText} />
+                                        style={this.calculateTextStyle(styles, scales[1], true)}>
+                                            <Text text={texts[1]} />
                                     </text>
                                 }
                             </g>
                         </Fragment>
                     }
-                </MotionComponent>
+                </Motion>
             </svg>
         );
     }
