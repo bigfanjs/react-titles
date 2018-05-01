@@ -6,7 +6,6 @@ import uniqid from "uniqid";
 const config = { stiffness: 30, damping: 10 };
 
 const FakeMotion = ({ children }) => children({});
-
 const Text = (props) => {
     const text = props.text;
     const values = /\*(\w+)\*/g.exec(text) || [];
@@ -90,41 +89,29 @@ class Title extends Component {
     });
 
     getDefaultStyle = (y1) => {
-        const { open, texts } = this.state;
+        const texts = this.state.texts;
+        const styles = texts.length > 1 ? {...this.end, y2: 0, rotation: 0} : this.start;
 
-        if (!open) return null;
-
-        if (texts.length === 1) {
-            return Object.assign({}, this.start, { y1 });
-        }
-
-        return Object.assign({}, this.end, { y1, y2: 0 });
+        return { ...styles, y1 };
     }
 
     getStyles = (scale1, scale2) => {
         const {open, texts} = this.state;
 
-        const length = texts.length > 1;
-        const styles = length || open ? this.end : this.start;
+        const isTitleChanged = texts.length > 1;
+        const styles = isTitleChanged || open ? this.end : this.start;
         const { scale, rotation, y1 = scale1 } = styles;
 
         return {
             scale: spring(scale, config),
-            rotation: spring(rotation * (length ? 2 : 1), config),
+            rotation: spring(rotation, config),
             y1: spring(y1, config),
-            y2: length ? spring(-Math.max(scale1, scale2), config) : 0
+            y2: isTitleChanged ? spring(-Math.max(scale1, scale2), config) : 0
         };
     };
 
     handleRest = () => {
-        const { open, texts } = this.state;
-
-        if (!open) this.setState({ close: true });
-        if (texts[1]) {
-            this.setState((state) => ({
-                texts: [state.texts[0]]
-            }));
-        }
+        if (!this.state.open) this.setState({ close: true });
     }
 
     getScalesAndGaps = (bboxs) => {
