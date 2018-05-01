@@ -138,6 +138,10 @@ class Title extends Component {
         const boxSize = size * this.boxSize / 100;
         const { scales, gaps, ys } = this.getScalesAndGaps(bboxs);
 
+        if (texts[0].length < 3) {
+            throw new Error("text length should be more than 2 characters long");
+        }
+
         return (
             !this.state.close &&
             <svg width={size} height={size}>
