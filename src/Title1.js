@@ -13,16 +13,13 @@ const Text = (props) => {
     if (values.length) {
         const index = text.indexOf(values[0]);
 
-        return [
-            text.slice(0, index),
-            <tspan
-                key="tspan"
-                alignmentBaseline="central"
-                fontWeight="bold">
-                {values[1]}
-            </tspan>,
-            text.slice(index + values[0].length)
-        ];
+        return (
+            <Fragment>
+                <tspan >{text.slice(0, index)}</tspan>
+                <tspan fontWeight="bold">{values[1]}</tspan>
+                <tspan>{text.slice(index + values[0].length)}</tspan>
+            </Fragment>
+        );
     }
 
     return text;
@@ -173,6 +170,9 @@ class Title extends Component {
                                 />
                             </g>
                             <g clipPath={`url(#clip-middle-${this.id})`}>
+                                {   typeof InstallTrigger !== "undefined" &&
+                                    <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+                                }
                                 <text
                                     ref={el => this.text = el}
                                     x={center}
@@ -180,6 +180,7 @@ class Title extends Component {
                                     fill="white"
                                     textAnchor="middle"
                                     alignmentBaseline="central"
+                                    dominantBaseline="central"
                                     style={this.calculateTextStyle(styles, scales[0])}>
                                         <Text text={texts[0]} />
                                 </text>
@@ -190,6 +191,7 @@ class Title extends Component {
                                         fill="white"
                                         textAnchor="middle"
                                         alignmentBaseline="central"
+                                        dominantBaseline="central"
                                         style={this.calculateTextStyle(styles, scales[1], true)}>
                                             <Text text={texts[1]} />
                                     </text>
