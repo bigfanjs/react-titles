@@ -60,6 +60,7 @@ class Title extends Component {
         const { scales, gaps, widths } = this.state;
 
         if (!isEqual(scales, prevState.scales) && widths[0] && scales[0] && gaps[0]) {
+            if (this.timeline) this.timeline.kill();
             this.animate();
         }
 
@@ -95,7 +96,12 @@ class Title extends Component {
         );
 
         rectTimeline
-            .from(this.rect, 1, { scaleX: 0, transformOrigin: "right", ease })
+            .fromTo(
+                this.rect,
+                1,
+                { scaleX: 0, transformOrigin: "right", ease },
+                { scaleX: 1 }
+            )
             .fromTo(
                 this.rect,
                 0.5,
@@ -105,7 +111,7 @@ class Title extends Component {
 
         text2Timeline.fromTo(
             this.texts[1],
-            1,
+            0.7,
             {   scale: scales[1],
                 x: this.props.size / 2,
                 y: (gaps[0] + gaps[1]) * 3,
