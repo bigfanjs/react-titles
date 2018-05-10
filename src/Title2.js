@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { TimelineMax, Power4 } from "gsap";
+import { TimelineMax, Power3 } from "gsap";
 import isEqual from "lodash/isEqual";
 
 class Title extends Component {
@@ -30,88 +30,120 @@ class Title extends Component {
         size: PropTypes.number
     };
 
-    static getDerivedStateFromProps(nextProps, prevState) {
-        if (nextProps.open !== prevState.open) {
-            return { open: nextProps.open, close: false };
+    static getDerivedStateFromProps({open, text1, text2}, { open: prevOpen, texts }) {
+        if (open !== prevOpen) return { open: open, close: false };
+
+        if (!isEqual([text1, text2], texts)) {
+            return {
+                texts: [text1, text2],
+                close: false,
+                scales: [0, 0],
+                gaps: [0, 0],
+                widths: [0, 0]
+            };
         }
 
         return null;
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        const { open, scales } = this.state;
+    shouldComponentUpdate(nextProps, { open: nextOpen, texts: nextTexts, scales: nextScales }) {
+        const { open, scales, texts } = this.state;
 
-        return nextState.open !== open || !scales[0];
+        return nextOpen !== open || !isEqual(scales, nextScales) || !isEqual(texts, nextTexts);
     }
 
     componentDidMount() {
+        this.recalculate();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        const { scales, gaps, widths } = this.state;
+
+        if (!isEqual(scales, prevState.scales) && widths[0] && scales[0] && gaps[0]) {
+            this.animate();
+        }
+
+        if (this.state.open) this.timeline.play();
+        else this.timeline.reverse();
+
+        this.recalculate();
+    }
+
+    recalculate = () => {
         const bboxs = this.texts.map((text) => text.getBBox());
         const { scales, gaps, widths } = this.getScalesAndGaps(bboxs);
 
         this.setState({ scales, gaps, widths });
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        const {scales, widths} = this.state;
-        const ease = Power4.easeOut;
+    animate = () => {
+        const { scales, gaps, widths } = this.state;
+        const ease = Power3.easeOut;
 
-        if (!isEqual(this.state.scales, prevState.scales)) {
-            const text1Timeline = new TimelineMax();
-            const text2Timeline = new TimelineMax({ delay: 1 });
-            const rectTimeline = new TimelineMax();
+        const text1Timeline = new TimelineMax();
+        const text2Timeline = new TimelineMax({ delay: 1 });
+        const rectTimeline = new TimelineMax();
 
-            text1Timeline.set(this.texts[0], {scale: scales[0], transformOrigin: "center"});
-            text1Timeline.from(this.texts[0], 1, { x: -widths[0], ease });
+        text1Timeline.fromTo(
+            this.texts[0],
+            1,
+            {   scale: scales[0],
+                x: -widths[0] / 2,
+                y: gaps[0],
+                transformOrigin: "center"      },
+            { x: this.props.size / 2 + 4, ease }
+        );
 
-            rectTimeline.from(this.rect, 1, { scaleX: 0, transformOrigin: "right", ease });
-            rectTimeline.from(this.rect, 1, { scaleY: 0.1, transformOrigin: "right", ease });
+        rectTimeline
+            .from(this.rect, 1, { scaleX: 0, transformOrigin: "right", ease })
+            .fromTo(
+                this.rect,
+                0.5,
+                { y: gaps[0] * 2, scaleY: 0.1 },
+                { scaleY: 1, transformOrigin: "right", ease }
+            );
 
-            text2Timeline.set(this.texts[1], { scale: scales[1], transformOrigin: "center" });
-            text2Timeline.from(this.texts[1], 1, { y: 100, ease });
+        text2Timeline.fromTo(
+            this.texts[1],
+            1,
+            {   scale: scales[1],
+                x: this.props.size / 2,
+                y: (gaps[0] + gaps[1]) * 3,
+                transformOrigin: "center"      },
+            {   y: gaps[0] * 2 + gaps[1], ease }
+        );
 
-            this.timeline = new TimelineMax({ paused: true });
-            this.timeline.add([ text1Timeline, text2Timeline, rectTimeline ]);
-        }
-
-        if (this.state.open) {
-            this.timeline.play();
-        } else if (!this.state.open) {
-            this.timeline.reverse();
-        }
+        this.timeline = new TimelineMax({ paused: true });
+        this.timeline.add([text1Timeline, text2Timeline, rectTimeline]);
     }
 
     getScalesAndGaps = (bboxs) => {
-        return bboxs
-            .reduce(({ scales, gaps, widths }, { width=0, height=0 }) => {
-                const scale = width ? this.props.size / width : 1;
-                const gap = height * 0.75 * scale / 2;
+        return bboxs.reduce(({ scales, gaps, widths }, { width=0, height=0 }) => {
+            const scale = width ? this.props.size / width : 1;
+            const gap = height * 0.75 * scale / 2;
 
-                return {
-                    scales: [...scales, scale],
-                    gaps: [...gaps, gap],
-                    widths: [ ...widths, width * scale ]
-                };
-            }, { scales: [], gaps: [], widths: [] });
+            return {
+                scales: [...scales, scale],
+                gaps: [...gaps, gap],
+                widths: [ ...widths, width * scale ]
+            };
+        }, { scales: [], gaps: [], widths: [] });
     }
 
     render() {
         const size = this.props.size;
         const { texts, gaps } = this.state;
 
-        const height = (gaps[1] + gaps[0]) * 2;
-        const center = {x: size / 2, y: height / 2};
-
         return (
-            <svg width={size} height={height}>
+            <svg width={size} height={(gaps[1] + gaps[0]) * 2}>
                 <defs>
                     <mask id="myMask">
                         <rect width="100%" height="100%" fill="#fff" />
                         <text
                             id="text-1"
-                            x={center.x}
-                            y={gaps[0] * 2 + gaps[1]}
                             ref={(el) => this.texts[1] = el}
                             alignmentBaseline="central"
+                            fontWeight="bold"
                             textAnchor="middle">
                                 { texts[1] }
                         </text>
@@ -119,8 +151,6 @@ class Title extends Component {
                 </defs>
                 <text
                     id="text-2"
-                    x={center.x}
-                    y={gaps[0]}
                     ref={(el) => this.texts[0] = el}
                     fill="white"
                     textAnchor="middle"
@@ -130,8 +160,6 @@ class Title extends Component {
                 <g mask="url(#myMask)">
                     <rect
                         ref={(el) => this.rect = el}
-                        x="0"
-                        y={gaps[0] * 2}
                         width={size}
                         height={(gaps[1]) * 2}
                         fill="yellow"
