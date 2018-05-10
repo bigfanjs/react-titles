@@ -17,7 +17,7 @@ class Title extends Component {
             gaps: [0, 0],
             widths: [0, 0],
             open,
-            close: false,
+            close: !open,
             texts: [text1, text2]
         };
 
@@ -32,42 +32,38 @@ class Title extends Component {
 
     static getDerivedStateFromProps({open, text1, text2}, { open: prevOpen, texts }) {
         if (open !== prevOpen) return { open: open, close: false };
-
-        if (!isEqual([text1, text2], texts)) {
-            return {
-                texts: [text1, text2],
-                close: false,
-                scales: [0, 0],
-                gaps: [0, 0],
-                widths: [0, 0]
-            };
-        }
+        if (!isEqual([text1, text2], texts)) return { texts: [text1, text2] };
 
         return null;
     }
 
-    shouldComponentUpdate(nextProps, { open: nextOpen, texts: nextTexts, scales: nextScales }) {
-        const { open, scales, texts } = this.state;
-
-        return nextOpen !== open || !isEqual(scales, nextScales) || !isEqual(texts, nextTexts);
+    shouldComponentUpdate(nextProps, { open, texts, scales, close }) {
+        return (
+            open !== this.state.open            ||
+            close !== this.state.close          ||
+            !isEqual(this.state.scales, scales) ||
+            !isEqual(this.state.texts, texts)
+        );
     }
 
     componentDidMount() {
         this.recalculate();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        const { scales, gaps, widths } = this.state;
+    componentDidUpdate(prevProps, { open: pOpen, close: pClose, scales: pScales, texts }) {
+        const { scales, close, open } = this.state;
 
-        if (!isEqual(scales, prevState.scales) && widths[0] && scales[0] && gaps[0]) {
+        if (!isEqual(scales, pScales) || pClose) {
             if (this.timeline) this.timeline.kill();
             this.animate();
         }
 
-        if (this.state.open) this.timeline.play();
-        else this.timeline.reverse();
+        if (!isEqual(scales, pScales) || open !== pOpen) {
+            if (open) this.timeline.play();
+            else this.timeline.reverse();
+        }
 
-        this.recalculate();
+        if (!close && !isEqual(this.state.texts, texts)) this.recalculate();
     }
 
     recalculate = () => {
@@ -99,8 +95,8 @@ class Title extends Component {
             .fromTo(
                 this.rect,
                 1,
-                { scaleX: 0, transformOrigin: "right", ease },
-                { scaleX: 1 }
+                { scaleX: 0, transformOrigin: "right" },
+                { scaleX: 1, ease }
             )
             .fromTo(
                 this.rect,
@@ -119,9 +115,13 @@ class Title extends Component {
             {   y: gaps[0] * 2 + gaps[1], ease }
         );
 
-        this.timeline = new TimelineMax({ paused: true });
+        this.timeline = new TimelineMax({ paused: true, onReverseComplete: this.handleRest });
         this.timeline.add([text1Timeline, text2Timeline, rectTimeline]);
     }
+
+    handleRest = () => {
+        this.setState({ close: true });
+    };
 
     getScalesAndGaps = (bboxs) => {
         return bboxs.reduce(({ scales, gaps, widths }, { width=0, height=0 }) => {
@@ -138,9 +138,10 @@ class Title extends Component {
 
     render() {
         const size = this.props.size;
-        const { texts, gaps } = this.state;
+        const { texts, gaps, close } = this.state;
 
         return (
+            !close &&
             <svg width={size} height={(gaps[1] + gaps[0]) * 2}>
                 <defs>
                     <mask id="myMask">
