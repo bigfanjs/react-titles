@@ -10,6 +10,7 @@ class Title extends Component {
         const {text1, text2, open} = this.props;
 
         this.texts = [];
+        this.text3 = null;
         this.rect = null;
 
         this.state = {
@@ -22,6 +23,7 @@ class Title extends Component {
         };
 
         this.timeline = null;
+        this.isFirefox = typeof InstallTrigger !== "undefined";
     }
 
     static propTypes = {
@@ -50,10 +52,10 @@ class Title extends Component {
         this.recalculate();
     }
 
-    componentDidUpdate(prevProps, { open: pOpen, close: pClose, scales: pScales, texts }) {
+    componentDidUpdate(prevProps, { open: pOpen, close: wasClosed, scales: pScales, texts }) {
         const { scales, close, open } = this.state;
 
-        if (!isEqual(scales, pScales) || pClose) {
+        if (!isEqual(scales, pScales) || wasClosed) {
             if (this.timeline) this.timeline.kill();
             this.animate();
         }
@@ -67,7 +69,10 @@ class Title extends Component {
     }
 
     recalculate = () => {
-        const bboxs = this.texts.map((text) => text.getBBox());
+        const bboxs = this.texts
+            .filter((_, id) => id !== (this.isFirefox ? 1 : 2))
+            .map((text) => text.getBBox());
+
         const { scales, gaps, widths } = this.getScalesAndGaps(bboxs);
 
         this.setState({ scales, gaps, widths });
@@ -88,7 +93,7 @@ class Title extends Component {
                 x: -widths[0] / 2,
                 y: gaps[0],
                 transformOrigin: "center"      },
-            { x: this.props.size / 2 + 4, ease }
+            { x: this.props.size / 2, ease }
         );
 
         rectTimeline
@@ -143,6 +148,15 @@ class Title extends Component {
         return (
             !close &&
             <svg width={size} height={(gaps[1] + gaps[0]) * 2}>
+                {   this.isFirefox && // in firefox elements in <defs> are invisible.
+                    <text
+                        id="text-3"
+                        ref={(el) => this.texts[2] = el}
+                        fontWeight="bold"
+                        fill="transparent">
+                            { texts[1] }
+                    </text>
+                }
                 <defs>
                     <mask id="myMask">
                         <rect width="100%" height="100%" fill="#fff" />
@@ -150,6 +164,7 @@ class Title extends Component {
                             id="text-1"
                             ref={(el) => this.texts[1] = el}
                             alignmentBaseline="central"
+                            dominantBaseline="central" // vertical centering in firefox
                             fontWeight="bold"
                             textAnchor="middle">
                                 { texts[1] }
@@ -161,7 +176,8 @@ class Title extends Component {
                     ref={(el) => this.texts[0] = el}
                     fill="white"
                     textAnchor="middle"
-                    alignmentBaseline="central">
+                    alignmentBaseline="central" // vertical centering in firefox
+                    dominantBaseline="central">
                         { texts[0] }
                 </text>
                 <g mask="url(#myMask)">
