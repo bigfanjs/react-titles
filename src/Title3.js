@@ -86,43 +86,43 @@ class Title extends Component {
         const rect1Timeline = new TimelineMax({ delay: 1 });
         const rect2Timeline = new TimelineMax();
 
-        text2Timeline.fromTo(
-            this.texts[1],
-            1,
-            {
-                scale: scales[1],
-                y: gaps[0],
-                x: this.props.size / 2,
-                transformOrigin: "center"
-            },
-            { y: gaps[0] * 2 + gaps[1], ease }
-        );
-
-        rect2Timeline
-            .fromTo(this.rects[1], 1, {y: gaps[1], scaleX: 0}, {scaleX: 1, ease})
-            .to(this.rects[1], 1, { y: 0 });
-
         text1Timeline
             .fromTo(
-                this.texts[0],
+                this.texts[1],
                 1,
                 {
-                    scale: scales[0],
+                    scale: scales[1],
                     x: this.props.size,
                     y: gaps[0] + gaps[1],
                     transformOrigin: "center"
                 },
                 { x: this.props.size / 2, ease }
             )
-            .to(this.texts[0], 1, { y: gaps[0] });
+            .to(this.texts[1], 1, { y: gaps[1] });
+
+        text2Timeline.fromTo(
+            this.texts[0],
+            1,
+            {
+                scale: scales[0],
+                y: gaps[1],
+                x: this.props.size / 2,
+                transformOrigin: "center"
+            },
+            { y: gaps[1] * 2 + gaps[0], ease }
+        );
 
         rect1Timeline
             .fromTo(
                 this.rects[0],
                 1,
-                { scaleY: 0.5, y: gaps[0] * 2 + gaps[1] },
-                { scaleY: 1, y: gaps[0] * 2 }
+                { scaleY: 0.5, y: gaps[1] * 2 + gaps[0] },
+                { scaleY: 1, y: gaps[1] * 2 }
             );
+
+        rect2Timeline
+            .fromTo(this.rects[1], 1, {y: gaps[0], scaleX: 0}, {scaleX: 1, ease})
+            .to(this.rects[1], 1, { y: 0 });
 
         this.timeline = new TimelineMax({ paused: true, onReverseComplete: this.handleRest });
         this.timeline.add([text1Timeline, text2Timeline, rect1Timeline, rect2Timeline]);
@@ -152,6 +152,46 @@ class Title extends Component {
         return (
             !close &&
             <svg width={size} height={(gaps[1] + gaps[0]) * 2}>
+                <defs>
+                    <mask id="myMask">
+                        <rect width="100%" height="100%" fill="#fff" />
+                        <text
+                            id="text-2"
+                            ref={(el) => this.texts[1] = el}
+                            alignmentBaseline="central"
+                            dominantBaseline="central" // vertical centering in firefox
+                            fontWeight="bold"
+                            textAnchor="middle">
+                                { texts[1] }
+                        </text>
+                    </mask>
+                    <clipPath id="clipo">
+                        <rect
+                            ref={(el) => this.rects[0] = el}
+                            width={size}
+                            height={gaps[0] * 2}
+                        />
+                    </clipPath>
+                </defs>
+                <g clipPath="url(#clipo)">
+                    <text
+                        id="text-1"
+                        ref={(el) => this.texts[0] = el}
+                        fill="white"
+                        textAnchor="middle"
+                        alignmentBaseline="central" // vertical centering in firefox
+                        dominantBaseline="central">
+                            { texts[0] }
+                    </text>
+                </g>
+                <g mask="url(#myMask)">
+                    <rect
+                        ref={(el) => this.rects[1] = el}
+                        width={size}
+                        height={gaps[1] * 2}
+                        fill="yellow"
+                    />
+                </g>
                 {   this.isFirefox && // in firefox elements in <defs> are invisible.
                     <text
                         id="text-3"
@@ -161,46 +201,6 @@ class Title extends Component {
                             { texts[1] }
                     </text>
                 }
-                <defs>
-                    <mask id="myMask">
-                        <rect width="100%" height="100%" fill="#fff" />
-                        <text
-                            id="text-1"
-                            ref={(el) => this.texts[0] = el}
-                            alignmentBaseline="central"
-                            dominantBaseline="central" // vertical centering in firefox
-                            fontWeight="bold"
-                            textAnchor="middle">
-                                { texts[0] }
-                        </text>
-                    </mask>
-                    <clipPath id="clipo">
-                        <rect
-                            ref={(el) => this.rects[0] = el}
-                            width={size}
-                            height={gaps[1] * 2}
-                        />
-                    </clipPath>
-                </defs>
-                <g clipPath="url(#clipo)">
-                    <text
-                        id="text-2"
-                        ref={(el) => this.texts[1] = el}
-                        fill="white"
-                        textAnchor="middle"
-                        alignmentBaseline="central" // vertical centering in firefox
-                        dominantBaseline="central">
-                            { texts[1] }
-                    </text>
-                </g>
-                <g mask="url(#myMask)">
-                    <rect
-                        ref={(el) => this.rects[1] = el}
-                        width={size}
-                        height={gaps[0] * 2}
-                        fill="yellow"
-                    />
-                </g>
             </svg>
         );
     }
