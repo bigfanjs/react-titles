@@ -82,14 +82,14 @@ class Title extends Component {
         const ease = Power3.easeOut;
 
         const text1Timeline = new TimelineMax();
-        const text2Timeline = new TimelineMax({ delay: 1 });
-        const rect1Timeline = new TimelineMax({ delay: 1 });
+        const text2Timeline = new TimelineMax({ delay: 0.7 });
+        const rect1Timeline = new TimelineMax({ delay: 0.7 });
         const rect2Timeline = new TimelineMax();
 
         text1Timeline
             .fromTo(
                 this.texts[1],
-                1,
+                0.7,
                 {
                     scale: scales[1],
                     x: this.props.size,
@@ -98,11 +98,11 @@ class Title extends Component {
                 },
                 { x: this.props.size / 2, ease }
             )
-            .to(this.texts[1], 1, { y: gaps[1] });
+            .to(this.texts[1], 0.7, { y: gaps[1] });
 
         text2Timeline.fromTo(
             this.texts[0],
-            1,
+            0.7,
             {
                 scale: scales[0],
                 y: gaps[1],
@@ -115,14 +115,14 @@ class Title extends Component {
         rect1Timeline
             .fromTo(
                 this.rects[0],
-                1,
+                0.7,
                 { scaleY: 0.5, y: gaps[1] * 2 + gaps[0] },
                 { scaleY: 1, y: gaps[1] * 2 }
             );
 
         rect2Timeline
-            .fromTo(this.rects[1], 1, {y: gaps[0], scaleX: 0}, {scaleX: 1, ease})
-            .to(this.rects[1], 1, { y: 0 });
+            .fromTo(this.rects[1], 0.7, {y: gaps[0], scaleX: 0}, {scaleX: 1, ease})
+            .to(this.rects[1], 0.7, { y: 0 });
 
         this.timeline = new TimelineMax({ paused: true, onReverseComplete: this.handleRest });
         this.timeline.add([text1Timeline, text2Timeline, rect1Timeline, rect2Timeline]);
@@ -192,7 +192,7 @@ class Title extends Component {
                         fill="yellow"
                     />
                 </g>
-                {   this.isFirefox && // in firefox elements in <defs> are invisible.
+                {   this.isFirefox && // in firefox elements in <mask> are invisible.
                     <text
                         id="text-3"
                         ref={(el) => this.texts[2] = el}
