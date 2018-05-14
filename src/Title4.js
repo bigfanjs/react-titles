@@ -137,7 +137,7 @@ class Title extends Component {
                         <rect
                             ref={(el) => this.rects[1] = el}
                             x={-center * 0.5}
-                            y={center + 5}
+                            y={center + barHeight / 2}
                             width={size * 1.5}
                             height={center * 1.5 - barHeight / 2}
                         />
@@ -184,7 +184,7 @@ class Title extends Component {
                 <rect
                     ref={(el) => this.rects[0] = el}
                     x="0"
-                    y={center - 5}
+                    y={center - barHeight / 2}
                     width={size}
                     height={barHeight}
                     fill="yellow"
