@@ -21,6 +21,8 @@ class Title extends Component {
             texts: [text1, text2]
         };
 
+        this.barHeight = 2.5;
+
         this.timeline = null;
         this.isFirefox = typeof InstallTrigger !== "undefined";
     }
@@ -68,9 +70,7 @@ class Title extends Component {
     }
 
     recalculate = () => {
-        const bboxs = this.texts
-            .filter((_, id) => id !== (this.isFirefox ? 1 : 2))
-            .map((text) => text.getBBox());
+        const bboxs = this.texts.map((text) => text.getBBox());
 
         const { scales, gaps, widths } = this.getScalesAndGaps(bboxs);
 
@@ -85,11 +85,11 @@ class Title extends Component {
         const rect3Timeline = new TimelineMax({ delay: 1 });
 
         rectTimeline
-            .from(this.rect, 1, { scaleX: 0, transformOrigin: "center", ease })
-            .from(this.rect, 1, { rotation: 180, ease });
+            .from(this.rects[0], 1, { scaleX: 0, transformOrigin: "center", ease })
+            .from(this.rects[0], 1, { rotation: 180, ease });
 
-        rect2Timeline.from(this.rect2, 1, { rotation: 180, transformOrigin: "50% 0%", ease });
-        rect3Timeline.from(this.rect3, 1, { rotation: 180, transformOrigin: "50% 100%", ease });
+        rect2Timeline.from(this.rects[1], 1, { rotation: 180, transformOrigin: "50% 0%", ease });
+        rect3Timeline.from(this.rects[2], 1, { rotation: 180, transformOrigin: "50% 100%", ease });
 
         this.timeline = new TimelineMax({ paused: true, onReverseComplete: this.handleRest });
         this.timeline.add([rectTimeline, rect2Timeline, rect3Timeline]);
@@ -102,7 +102,7 @@ class Title extends Component {
     getScalesAndGaps = (bboxs) => {
         return bboxs.reduce(({ scales, gaps, widths }, { width = 0, height = 0 }) => {
             const scale = width ? this.props.size / width : 1;
-            const gap = height * 0.75 * scale / 2;
+            const gap = height * 0.68 * scale / 2;
 
             return {
                 scales: [...scales, scale],
@@ -115,7 +115,8 @@ class Title extends Component {
     render() {
         const size = this.props.size;
         const center = size / 2;
-        const { texts, scales, close } = this.state;
+        const { texts, scales, gaps, close } = this.state;
+        const barHeight = size * this.barHeight / 100;
 
         return (
             !close &&
@@ -123,51 +124,58 @@ class Title extends Component {
                 <defs>
                     <clipPath id="clip-path1">
                         <rect
-                            ref={(el) => this.rect2 = el}
+                            ref={(el) => this.rects[1] = el}
                             x={-center * 0.5}
                             y={center + 5}
                             width={size * 1.5}
-                            height={center * 1.5 - 5}
+                            height={center * 1.5 - barHeight / 2}
                         />
                     </clipPath>
                     <clipPath id="clip-path2">
                         <rect
-                            ref={(el) => this.rect3 = el}
+                            ref={(el) => this.rects[2] = el}
                             x={-center * 0.5}
                             y={-center * 0.5}
                             width={size * 1.5}
-                            height={center * 1.5 - 5}
+                            height={center * 1.5 - barHeight / 2}
                         />
                     </clipPath>
                 </defs>
                 <g clipPath="url(#clip-path1)">
+                    {   this.isFirefox &&
+                        <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+                    }
                     <text
                         id="text-1"
                         ref={(el) => this.texts[0] = el}
                         fill="white"
                         textAnchor="middle"
-                        alignmentBaseline="hanging"
-                        style={{ transform: `translate(${center}px, ${center+10}px) scale(${scales[0]})` }}>
+                        alignmentBaseline={this.isFirefox ? "central" : "hanging"}
+                        dominantBaseline="central"
+                        style={{ transform: `translate(${center}px, ${center + (this.isFirefox ? gaps[0] + barHeight : barHeight)}px) scale(${scales[0]})` }}>
                             { texts[0] }
                     </text>
                 </g>
                 <g clipPath="url(#clip-path2)">
+                    {   this.isFirefox &&
+                        <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+                    }
                     <text
                         id="text-2"
                         ref={(el) => this.texts[1] = el}
                         fill="white"
                         fontWeight="bold"
                         textAnchor="middle"
-                        style={{ transform: `translate(${center}px, ${center-10}px) scale(${scales[1]})` }}>
+                        style={{ transform: `translate(${center}px, ${center - barHeight}px) scale(${scales[1]})` }}>
                             { texts[1] }
                     </text>
                 </g>
                 <rect
-                    ref={(el) => this.rect = el}
+                    ref={(el) => this.rects[0] = el}
                     x="0"
                     y={center - 5}
                     width={size}
-                    height="10"
+                    height={barHeight}
                     fill="yellow"
                 />
             </svg>
