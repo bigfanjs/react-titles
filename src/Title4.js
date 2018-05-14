@@ -21,6 +21,7 @@ class Title extends Component {
             texts: [text1, text2]
         };
 
+        this.center = this.props.size / 2;
         this.barHeight = 2.5;
 
         this.timeline = null;
@@ -112,6 +113,16 @@ class Title extends Component {
         }, { scales: [], gaps: [], widths: [] });
     }
 
+    getTextStyle = (scale, barHeight, gap=false) => ({
+        transform: `
+            translate(
+                ${this.center}px,
+                ${this.center + (gap ? (barHeight + (this.isFirefox ? gap : 0)) : -barHeight) }px
+            )
+            scale(${scale})
+        `
+    })
+
     render() {
         const size = this.props.size;
         const center = size / 2;
@@ -152,7 +163,7 @@ class Title extends Component {
                         textAnchor="middle"
                         alignmentBaseline={this.isFirefox ? "central" : "hanging"}
                         dominantBaseline="central"
-                        style={{ transform: `translate(${center}px, ${center + (this.isFirefox ? gaps[0] + barHeight : barHeight)}px) scale(${scales[0]})` }}>
+                        style={this.getTextStyle(scales[0], barHeight, gaps[0])}>
                             { texts[0] }
                     </text>
                 </g>
@@ -166,7 +177,7 @@ class Title extends Component {
                         fill="white"
                         fontWeight="bold"
                         textAnchor="middle"
-                        style={{ transform: `translate(${center}px, ${center - barHeight}px) scale(${scales[1]})` }}>
+                        style={this.getTextStyle(scales[1], barHeight)}>
                             { texts[1] }
                     </text>
                 </g>
