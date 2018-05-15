@@ -102,6 +102,10 @@ class Title extends Component {
         return this.state.open ? this.start : { ...this.end, d };
     }
 
+    handleRest = () => {
+        if (!this.state.open) this.setState({ close: true });
+    }
+
     render() {
         const size = this.props.size;
         const { texts, scales, gaps, close } = this.state;
@@ -123,7 +127,8 @@ class Title extends Component {
                 </defs>
                 <Motion
                     defaultStyle={this.getDefaultStyle(boxSize * 4)}
-                    style={this.getStyle(boxSize * 4)}>
+                    style={this.getStyle(boxSize * 4)}
+                    onRest={this.handleRest}>
                     {({ d, x, y }) => (
                         <Fragment>
                             <rect
