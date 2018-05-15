@@ -45,8 +45,8 @@ class Title extends Component {
 
     shouldComponentUpdate(nextProps, { open, texts, scales, close }) {
         return (
-            open !== this.state.open ||
-            close !== this.state.close ||
+            open !== this.state.open            ||
+            close !== this.state.close          ||
             !isEqual(this.state.scales, scales) ||
             !isEqual(this.state.texts, texts)
         );
@@ -56,10 +56,8 @@ class Title extends Component {
         this.recalculate();
     }
 
-    componentDidUpdate(prevProps, { open: pOpen, close: wasClosed, scales: pScales, texts }) {
-        const { scales, close, open } = this.state;
-
-        if (!close && !isEqual(this.state.texts, texts)) this.recalculate();
+    componentDidUpdate() {
+        if (!this.state.close) this.recalculate();
     }
 
     recalculate = () => {
@@ -72,16 +70,15 @@ class Title extends Component {
     }
 
     getScalesAndGaps = (bboxs, sizes) => {
-        return bboxs.reduce(({ scales, gaps, widths }, { width = 0, height = 0 }, id) => {
+        return bboxs.reduce(({ scales, gaps }, { width = 0, height = 0 }, id) => {
             const scale = width ? sizes[id] / width : 1;
             const gap = height * 0.7 * scale / 2;
 
             return {
                 scales: [...scales, scale],
-                gaps: [...gaps, gap],
-                widths: [...widths, width * scale]
+                gaps: [...gaps, gap]
             };
-        }, { scales: [], gaps: [], widths: [] });
+        }, { scales: [], gaps: [] });
     }
 
     getStyle = (dasharray) => {
@@ -151,6 +148,7 @@ class Title extends Component {
                                     fontWeight="bold"
                                     textAnchor="middle"
                                     alignmentBaseline="central"
+                                    dominantBaseline="central"
                                     style={{ transform: `translate(${x}%, 45%) scale(${scales[1]})` }}>
                                         { texts[1] }
                                 </text>
@@ -160,6 +158,7 @@ class Title extends Component {
                                     fill="white"
                                     textAnchor="middle"
                                     alignmentBaseline="central"
+                                    dominantBaseline="central"
                                     style={{ transform: `translate(50%, ${y}%) scale(${scales[0]})` }}>
                                         { texts[0] }
                                 </text>
