@@ -27,7 +27,6 @@ class Title extends Component {
 
         this.start = { d: 0, x: 150, y: 100 };
         this.end = { x: 50, y: 82 };
-        this.isFirefox = typeof InstallTrigger !== "undefined";
     }
 
     static propTypes = {
@@ -56,17 +55,16 @@ class Title extends Component {
         this.recalculate();
     }
 
-    componentDidUpdate() {
-        if (!this.state.close) this.recalculate();
+    componentDidUpdate(prevProps, prevState) {
+        if (!isEqual(this.state.texts, prevState.texts)) this.recalculate();
     }
 
     recalculate = () => {
         const bboxs = this.texts.map((text) => text.getBBox());
         const sizes = this.sizes.map((size) => this.size - (this.size * size/ 100));
+        const { scales, gaps } = this.getScalesAndGaps(bboxs, sizes);
 
-        const { scales, gaps, widths } = this.getScalesAndGaps(bboxs, sizes);
-
-        this.setState({ scales, gaps, widths });
+        this.setState({ scales, gaps });
     }
 
     getScalesAndGaps = (bboxs, sizes) => {
