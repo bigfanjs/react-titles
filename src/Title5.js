@@ -25,7 +25,7 @@ class Title extends Component {
         this.center = this.size / 2;
         this.strokeWidth = 3.75;
 
-        this.start = { d: 0, x: 150, y: 95 };
+        this.start = { d: 0, x: 150, y: 100 };
         this.end = { x: 50, y: 82 };
         this.isFirefox = typeof InstallTrigger !== "undefined";
     }
@@ -71,7 +71,8 @@ class Title extends Component {
 
     getScalesAndGaps = (bboxs, sizes) => {
         return bboxs.reduce(({ scales, gaps }, { width = 0, height = 0 }, id) => {
-            const scale = width ? sizes[id] / width : 1;
+            const maxWidth = !id ? 100 : 0;
+            const scale = width ? sizes[id] / Math.max(width, maxWidth) : 1;
             const gap = height * 0.7 * scale / 2;
 
             return {
@@ -159,7 +160,7 @@ class Title extends Component {
                                     textAnchor="middle"
                                     alignmentBaseline="central"
                                     dominantBaseline="central"
-                                    style={{ transform: `translate(50%, ${y}%) scale(${scales[0]})` }}>
+                                    style={{ transform: `translate(50%, ${y}%) scale(${(scales[0])})` }}>
                                         { texts[0] }
                                 </text>
                             </g>
