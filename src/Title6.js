@@ -28,6 +28,8 @@ class Title extends Component {
         this.strokeWidth = 2;
         this.offset = 7.5;
         this.dasharray = 20;
+
+        this.isFirefox = typeof InstallTrigger !== "undefined";
     }
 
     static propTypes = {
@@ -142,6 +144,9 @@ class Title extends Component {
                                 fill="transparent"
                             />
                             <g clipPath="url(#clip1)">
+                                {   this.isFirefox &&
+                                    <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+                                }
                                 <text
                                     id="text-1"
                                     ref={(el) => this.texts[0] = el}
@@ -154,6 +159,9 @@ class Title extends Component {
                                 </text>
                             </g>
                             <g clipPath="url(#clip2)">
+                                {   this.isFirefox &&
+                                    <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+                                }
                                 <text
                                     id="text-2"
                                     ref={(el) => this.texts[1] = el}
