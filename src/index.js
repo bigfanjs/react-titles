@@ -4,3 +4,4 @@ export { default as Title3 } from "./Title3";
 export { default as Title4 } from "./Title4";
 export { default as Title5 } from "./Title5";
 export { default as Title6 } from "./Title6";
+export { default as Title7 } from "./Title7";
