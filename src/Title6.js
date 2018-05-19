@@ -12,8 +12,6 @@ class Title extends Component {
         const { text1, text2, open } = this.props;
 
         this.texts = [];
-        this.rects = [];
-        this.sizes = [25, 7.5];
 
         this.state = {
             scales: [0, 0],
@@ -64,8 +62,7 @@ class Title extends Component {
 
     recalculate = () => {
         const bboxs = this.texts.map((text) => text.getBBox());
-        const sizes = this.sizes.map((size) => this.size - (this.size * size / 100));
-        const { scales, gaps } = this.getScalesAndGaps(bboxs, sizes);
+        const { scales, gaps } = this.getScalesAndGaps(bboxs);
 
         this.setState({ scales, gaps });
     }
@@ -132,7 +129,6 @@ class Title extends Component {
                     {({ d, y1, y2 }) => (
                         <Fragment>
                             <rect
-                                ref={(el) => this.rects[0] = el}
                                 x={strokeWidth / 2}
                                 y={strokeWidth / 2}
                                 width={box.width}
