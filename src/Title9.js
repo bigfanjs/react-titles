@@ -147,6 +147,7 @@ class Title extends Component {
                         id="text-1"
                         ref={(el) => this.texts[0] = el}
                         fill="white"
+                        fontWeight="bold"
                         textAnchor="middle"
                         alignmentBaseline="central" // vertical centering in firefox
                         dominantBaseline="central">
@@ -154,6 +155,9 @@ class Title extends Component {
                     </text>
                 </g>
                 <g clipPath="url(#clip1)">
+                    {   this.isFirefox &&
+                        <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+                    }
                     <text
                         id="text-2"
                         ref={(el) => this.texts[1] = el}
