@@ -20,6 +20,10 @@ class Title extends Component {
             texts: [text1, text2]
         };
 
+        const barWidth = 2.5;
+
+        this.barWidth = Math.ceil(this.props.size * barWidth / 100);
+
         this.timeline = null;
         this.isFirefox = typeof InstallTrigger !== "undefined";
     }
@@ -83,20 +87,18 @@ class Title extends Component {
 
         this.timeline
             .fromTo(this.rects[1], 0.7, { scaleY: 0, y: 0 }, { scaleY: 1 })
-            .fromTo(this.rects[1], 0.7, { x: 0 }, { x: this.props.size - 10 })
+            .fromTo(this.rects[1], 0.7, { x: 0 }, { x: this.props.size - this.barWidth })
             .from(this.rects[2], 0.7, { scaleX: 0 }, "-=0.7")
             .to(this.rects[1], 0.7, { y: gaps[1] * 2, scaleY: 0 })
             .from(this.rects[0], 0.7, { scaleX: 0, transformOrigin: "right" }, "-=0.7")
             .fromTo(
                 this.texts[0],
                 0.7,
-                {
-                    scale: scales[0],
+                {  scale: scales[0],
                     x: this.props.size / 2,
-                    y: (gaps[1] - gaps[0]) * 2 + 10,
-                    transformOrigin: "center"
-                },
-                { y: gaps[1] * 2 + gaps[0] + 10, ease },
+                    y: (gaps[1] - gaps[0]) * 2 + this.barWidth,
+                    transformOrigin: "center" },
+                { y: gaps[1] * 2 + gaps[0] + this.barWidth, ease },
                 "-=0.7"
             );
     }
@@ -135,7 +137,7 @@ class Title extends Component {
                     </clipPath>
                     <clipPath id="clip2">
                         <rect
-                            y={gaps[1] * 2 + 10}
+                            y={gaps[1] * 2 + this.barWidth}
                             ref={(el) => this.rects[3] = el}
                             width={size}
                             height={gaps[0] * 2}
@@ -172,7 +174,7 @@ class Title extends Component {
                 </g>
                 <rect
                     ref={(el) => this.rects[1] = el}
-                    width={10}
+                    width={this.barWidth}
                     height={gaps[1] * 2}
                     fill="yellow"
                 />
@@ -180,7 +182,7 @@ class Title extends Component {
                     y={gaps[1] * 2}
                     ref={(el) => this.rects[0] = el}
                     width={size}
-                    height={10}
+                    height={this.barWidth}
                     fill="yellow"
                 />
             </svg>
