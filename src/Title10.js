@@ -143,7 +143,7 @@ class Title extends Component {
     render() {
         const size = this.props.size;
         const center = size / 2;
-        const { texts, scales, gaps, close } = this.state;
+        const { texts, gaps, close } = this.state;
         const height = Math.min((gaps[1] + gaps[0]) * 2 + 10, size);
 
         return (
