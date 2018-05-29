@@ -97,7 +97,7 @@ class Title extends Component {
     }
 
     render() {
-        const size = this.props.size;
+        const {size, style} = this.props;
         const { texts, scales, gaps, close } = this.state;
         const Motion = (scales[0] && scales[1]) ? RealMotion : FakeMotion;
         const strokeWidth = size * this.strokeWidth / 100;
@@ -113,7 +113,7 @@ class Title extends Component {
 
         return (
             !close &&
-            <svg width={size} height={height}>
+            <svg width={size} height={height} style={style}>
                 <defs>
                     <clipPath id="clip1">
                         <rect x="0" y="0" width={size} height={middle} />
