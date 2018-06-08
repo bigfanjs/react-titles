@@ -158,10 +158,10 @@ class Title extends Component {
                         />
                     </clipPath>
                     <clipPath id="clip2">
-                        <rect x="0" y={height / 2} width={center} height={height / 2} />
+                        <rect x="0" y={gaps[1] * 2 + this.barWidth} width={center} height={gaps[0] * 2} />
                     </clipPath>
                     <clipPath id="clip3">
-                        <rect x={center} y={height / 2} width={center} height={height / 2} />
+                        <rect x={center} y={gaps[1] * 2 + this.barWidth} width={center} height={gaps[0] * 2} />
                     </clipPath>
                 </defs>
                 <g clipPath="url(#clip2)">
