@@ -22,6 +22,7 @@ class Title extends Component {
         };
 
         this.size = this.props.size;
+        this.forceClose = this.props.forceClose || false;
         this.center = this.size / 2;
         this.strokeWidth = 2;
         this.offset = 7.5;
@@ -33,7 +34,8 @@ class Title extends Component {
     static propTypes = {
         text1: PropTypes.string,
         text2: PropTypes.string,
-        size: PropTypes.number
+        size: PropTypes.number,
+        forceClose: PropTypes.bool
     };
 
     static getDerivedStateFromProps({ open, text1, text2 }, { open: prevOpen, texts }) {
@@ -79,7 +81,7 @@ class Title extends Component {
     getStyle = (start, end) => {
         const config = { stiffness: 30, damping: 10 };
 
-        const { y1, y2, d } = this.state.open ? end : start;
+        const { y1, y2, d } = this.state.open && !this.forceClose ? end : start;
 
         return {
             y1: spring(y1, config),
@@ -89,7 +91,7 @@ class Title extends Component {
     };
 
     getDefaultStyle = (start, end) => {
-        return this.state.open ? start : end;
+        return this.state.open && !this.forceClose ? start : end;
     }
 
     handleRest = () => {
