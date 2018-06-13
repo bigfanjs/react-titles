@@ -2,6 +2,7 @@ import React, { Component, Fragment } from "react";
 import { Motion as RealMotion, spring } from "react-motion";
 import PropTypes from "prop-types";
 import isEqual from "lodash/isEqual";
+import uniqid from "uniqid";
 
 const FakeMotion = ({ children }) => children({});
 
@@ -20,6 +21,8 @@ class Title extends Component {
             close: !open,
             texts: [text1, text2]
         };
+
+        this.id = uniqid();
 
         this.size = this.props.size;
         this.forceClose = this.props.forceClose || false;
@@ -117,10 +120,10 @@ class Title extends Component {
             !close &&
             <svg x={x} y={y} width={size} height={height} style={style} ref={innerRef}>
                 <defs>
-                    <clipPath id="clip1">
+                    <clipPath id={`clip1-${this.id}`}>
                         <rect x="0" y="0" width={size} height={middle} />
                     </clipPath>
-                    <clipPath id="clip2">
+                    <clipPath id={`clip2-${this.id}`}>
                         <rect x="0" y={middle} width={size} height={gaps[1] * 2 + offset} />
                     </clipPath>
                 </defs>
@@ -141,7 +144,7 @@ class Title extends Component {
                                 strokeDashoffset={ dasharray / 2 }
                                 fill="transparent"
                             />
-                            <g clipPath="url(#clip1)">
+                            <g clipPath={`url(#clip1-${this.id})`}>
                                 {   this.isFirefox &&
                                     <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
                                 }
@@ -156,7 +159,7 @@ class Title extends Component {
                                         { texts[0] }
                                 </text>
                             </g>
-                            <g clipPath="url(#clip2)">
+                            <g clipPath={`url(#clip2-${this.id})`}>
                                 {   this.isFirefox &&
                                     <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
                                 }
