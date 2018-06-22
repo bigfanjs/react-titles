@@ -125,7 +125,10 @@ class Title extends Component {
     }
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     };
 
     getScalesAndGaps = (bboxs) => {
@@ -141,14 +144,14 @@ class Title extends Component {
     }
 
     render() {
-        const size = this.props.size;
+        const {size, style} = this.props;
         const center = size / 2;
         const { texts, gaps, close } = this.state;
         const height = Math.min((gaps[1] + gaps[0]) * 2 + 10, size);
 
         return (
             !close &&
-            <svg width={size} height={height}>
+            <svg width={size} height={height} style={style}>
                 <defs>
                     <clipPath id="clip1">
                         <rect

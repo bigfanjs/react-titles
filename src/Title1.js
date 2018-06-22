@@ -108,7 +108,10 @@ class Title extends Component {
     };
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         if (!this.state.open) this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     }
 
     getScalesAndGaps = (bboxs) => {
@@ -130,7 +133,7 @@ class Title extends Component {
     }
 
     render() {
-        const size = this.props.size;
+        const {size, style} = this.props;
         const center = size / 2;
         const { texts, bboxs } = this.state;
         const Motion = bboxs.length ? RealMotion : FakeMotion;
@@ -144,7 +147,7 @@ class Title extends Component {
 
         return (
             !this.state.close &&
-            <svg width={size} height={size}>
+            <svg width={size} height={size} style={style}>
                 <defs>
                     <clipPath id={`clip-sides-${this.id}`}>
                         <rect x="0" y="0" width={size} height={center - gaps[0]} />

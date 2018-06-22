@@ -95,11 +95,14 @@ class Title extends Component {
     }
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         if (!this.state.open) this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     }
 
     render() {
-        const size = this.props.size;
+        const {size, style} = this.props;
         const { texts, scales, gaps, close } = this.state;
         const Motion = (scales[0] && scales[1]) ? RealMotion : FakeMotion;
         const offset = size * this.offset / 100;
@@ -111,7 +114,7 @@ class Title extends Component {
 
         return (
             !close &&
-            <svg width={size} height={Math.min(height, size)}>
+            <svg width={size} height={Math.min(height, size)} style={style}>
                 <defs>
                     <clipPath id="clip">
                         <rect x="0" y={middle} width={size} height={gaps[1] * 2 + offset} />

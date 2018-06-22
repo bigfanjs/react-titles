@@ -97,11 +97,14 @@ class Title extends Component {
     }
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         if (!this.state.open) this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     }
 
     render() {
-        const size = this.props.size;
+        const {size, style} = this.props;
         const center = this.props.size / 2;
         const { text, scale, gap, close } = this.state;
         const strokeWidth = size * this.strokeWidth / 100;
@@ -110,7 +113,7 @@ class Title extends Component {
 
         return (
             !close &&
-            <svg /* style={{ border: "1px solid" }} */ width={size} height={size}>
+            <svg width={size} height={size} style={style}>
                 <defs>
                     <clipPath id="clip1">
                         <rect x={center - half} y={center - gap} width={half} height={gap * 2} />

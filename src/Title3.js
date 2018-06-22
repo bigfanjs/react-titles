@@ -129,7 +129,10 @@ class Title extends Component {
     }
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     };
 
     getScalesAndGaps = (bboxs) => {

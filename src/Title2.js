@@ -125,7 +125,10 @@ class Title extends Component {
     }
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     };
 
     getScalesAndGaps = (bboxs) => {
@@ -142,12 +145,12 @@ class Title extends Component {
     }
 
     render() {
-        const size = this.props.size;
+        const {size, style} = this.props;
         const { texts, gaps, close } = this.state;
 
         return (
             !close &&
-            <svg width={size} height={(gaps[1] + gaps[0]) * 2}>
+            <svg width={size} height={(gaps[1] + gaps[0]) * 2} style={style}>
                 {   this.isFirefox && // in firefox elements in <defs> are invisible.
                     <text
                         id="text-3"

@@ -98,7 +98,10 @@ class Title extends Component {
     }
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         if (!this.state.open) this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     }
 
     render() {

@@ -99,18 +99,21 @@ class Title extends Component {
     }
 
     handleRest = () => {
+        const onComplete = this.props.onComplete;
+
         if (!this.state.open) this.setState({ close: true });
+        if (onComplete) onComplete(this.state.open);
     }
 
     render() {
-        const size = this.props.size;
+        const {size, style} = this.props;
         const { texts, scales, gaps, close } = this.state;
         const strokeWidth = size * this.strokeWidth / 100;
         const boxSize = size - strokeWidth;
 
         return (
             !close &&
-            <svg width={size} height={size}>
+            <svg width={size} height={size} style={style}>
                 <defs>
                     <clipPath id="clipo">
                         <rect
