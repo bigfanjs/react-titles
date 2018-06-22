@@ -34,7 +34,7 @@ To see the animation reverses when closing a Title component, you should pass th
 ```
 
 # Instalation
-``npm install react-title`` or ``yarn add react-titles``
+``npm install react-titles`` or ``yarn add react-titles``
 
 # Component API
 | Name          | Type          | Default      | Description                                          |
@@ -44,6 +44,7 @@ To see the animation reverses when closing a Title component, you should pass th
 | text2         | string        | empty string | The subtitle (Note: Title 1 and 7 have only one text)|
 | open          | boolean       | true         | Show or hide the componenet                          |
 | fontFamily    | string        | empty string | The font-family applied to texts                     |
+| onComplete    | func          | function     | Fires when animation completes                       |
 
 # License
 ``react-titles`` is under the MIT license.
