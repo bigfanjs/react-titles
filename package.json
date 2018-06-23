@@ -1,14 +1,15 @@
 {
   "name": "react-titles",
   "version": "1.0.0",
-  "description": "A collection of components which allows animating your titles",
+  "description": "A collection of components helps animate your titles",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx babel src --out-dir ."
   },
-  "keywords": [],
-  "author": "",
+  "repository": "https://github.com/bigfanjs/react-11",
+  "keywords": ["react", "title", "animation"],
+  "author": "Adel Jojo <bigfanjs@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "gsap": "^2.0.1",
