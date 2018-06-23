@@ -2,7 +2,7 @@
 React-titles is a collection of title animations made is SVG, React-motion and GSAP.
 
 With React Titles you can bring your web articles to life. When the component mounts to DOM it starts an animation, and the animation reverses back when it unmounts. The texts props passed to Title components are auto-sized to fit the specified box size. A title component automatically removes itself from DOM when it was closed.
-See a [See a demo](https://bigfanjs.github.io/react-titles-demo/)
+[See a demo](https://bigfanjs.github.io/react-titles-demo/)
 
 # Usage
 ```js
