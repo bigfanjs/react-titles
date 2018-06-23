@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx babel src --out-dir ."
   },
-  "repository": "https://github.com/bigfanjs/react-11",
+  "repository": "https://github.com/bigfanjs/react-titles",
   "keywords": ["react", "title", "animation"],
   "author": "Adel Jojo <bigfanjs@gmail.com>",
   "license": "ISC",
